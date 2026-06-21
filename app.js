@@ -502,12 +502,15 @@ const axisChips = [
   document.querySelector(".axis-y"),
   document.querySelector(".axis-z"),
 ];
+const axisBoard = document.querySelector(".axis-board");
+const axisToggle = document.querySelector(".axis-toggle");
 const legendItems = document.querySelector("#legend-items");
 const legendPanel = document.querySelector(".legend");
 const legendToggle = document.querySelector(".legend-toggle");
 const modeButtons = [...document.querySelectorAll("[data-mode]")];
 let currentDataset = null;
 let currentLegend = [];
+const axisViewModes = ["detail", "compact", "hidden"];
 
 const state = {
   width: 0,
@@ -532,6 +535,9 @@ const state = {
   pointers: new Map(),
   pinchDistance: 0,
   pinchCooldown: false,
+  axisViewMode: "detail",
+  axisLabelHits: [],
+  lastAxisTap: null,
   dimmedCategories: new Set(),
 };
 
@@ -618,14 +624,44 @@ function getAxisEnds() {
   };
 }
 
+function axisChipText(axisIndex) {
+  const ends = getAxisEnds();
+  const pairs = [
+    ["X", ends.xNeg, ends.xPos],
+    ["Y", ends.yNeg, ends.yPos],
+    ["Z", ends.zNeg, ends.zPos],
+  ];
+  const [axis, negative, positive] = pairs[axisIndex];
+  return `${axis}軸 ${negative} ↔ ${positive}`;
+}
+
+function updateAxisBoard() {
+  axisBoard.classList.toggle("is-compact", state.axisViewMode === "compact");
+  axisBoard.classList.toggle("is-hidden", state.axisViewMode === "hidden");
+  axisToggle.textContent =
+    state.axisViewMode === "detail" ? "Axes Full" : state.axisViewMode === "compact" ? "Axes Mini" : "Axes Off";
+  axisToggle.setAttribute("aria-pressed", String(state.axisViewMode !== "hidden"));
+  if (!currentDataset) return;
+  axisChips.forEach((chip, index) => {
+    chip.textContent = state.axisViewMode === "compact" ? axisChipText(index) : currentDataset.chips[index];
+  });
+}
+
+function cycleAxisBoard() {
+  const nextIndex = (axisViewModes.indexOf(state.axisViewMode) + 1) % axisViewModes.length;
+  state.axisViewMode = axisViewModes[nextIndex];
+  updateAxisBoard();
+}
+
 function drawAxis() {
+  state.axisLabelHits = [];
   const axes = [
-    [{ x: -1.35, y: 0, z: 0, label: getAxisEnds().xNeg }, { x: 1.35, y: 0, z: 0, label: getAxisEnds().xPos }, "#67d7d1"],
-    [{ x: 0, y: -1.35, z: 0, label: getAxisEnds().yNeg }, { x: 0, y: 1.35, z: 0, label: getAxisEnds().yPos }, "#8bd17c"],
-    [{ x: 0, y: 0, z: -1.35, label: getAxisEnds().zNeg }, { x: 0, y: 0, z: 1.35, label: getAxisEnds().zPos }, "#f0b35a"],
+    ["x", { x: -1.35, y: 0, z: 0, label: getAxisEnds().xNeg }, { x: 1.35, y: 0, z: 0, label: getAxisEnds().xPos }, "#67d7d1"],
+    ["y", { x: 0, y: -1.35, z: 0, label: getAxisEnds().yNeg }, { x: 0, y: 1.35, z: 0, label: getAxisEnds().yPos }, "#8bd17c"],
+    ["z", { x: 0, y: 0, z: -1.35, label: getAxisEnds().zNeg }, { x: 0, y: 0, z: 1.35, label: getAxisEnds().zPos }, "#f0b35a"],
   ];
   ctx.lineWidth = 1;
-  for (const [a, b, color] of axes) {
+  for (const [axis, a, b, color] of axes) {
     const pa = project(a);
     const pb = project(b);
     ctx.strokeStyle = color + "66";
@@ -633,12 +669,12 @@ function drawAxis() {
     ctx.moveTo(pa.x, pa.y);
     ctx.lineTo(pb.x, pb.y);
     ctx.stroke();
-    drawAxisLabel(pa, a.label, color);
-    drawAxisLabel(pb, b.label, color);
+    drawAxisLabel(pa, a.label, color, axis);
+    drawAxisLabel(pb, b.label, color, axis);
   }
 }
 
-function drawAxisLabel(point, label, color) {
+function drawAxisLabel(point, label, color, axis) {
   ctx.save();
   ctx.fillStyle = "rgba(6, 12, 22, 0.72)";
   ctx.strokeStyle = color + "88";
@@ -647,6 +683,7 @@ function drawAxisLabel(point, label, color) {
   const width = Math.min(168, Math.max(58, ctx.measureText(label).width + 20));
   const x = Math.max(12, Math.min(state.width - width - 12, point.x - width / 2));
   const y = Math.max(12, Math.min(state.height - 32, point.y - 15));
+  state.axisLabelHits.push({ axis, x, y, width, height: 26 });
   roundedRectPath(ctx, x, y, width, 26, 7);
   ctx.fill();
   ctx.stroke();
@@ -810,9 +847,7 @@ function applyDataset(mode) {
   card.axisList.innerHTML = dataset.axes
     .map(([axis, text]) => `<li><strong>${axis}</strong> ${text}</li>`)
     .join("");
-  axisChips.forEach((chip, index) => {
-    chip.textContent = dataset.chips[index];
-  });
+  updateAxisBoard();
   currentLegend = (dataset.legend || [
     ["core", "#f0c36a", "中心ノード"],
     ["connection", "#5de7ff", "接続ノード"],
@@ -864,6 +899,28 @@ function selectNode(index) {
   state.targetYaw = Math.atan2(node.x * SPACE_SCALE, node.z * SPACE_SCALE + 1.8) - 0.2;
   state.targetPitch = -Math.atan2(node.y * SPACE_SCALE, 2.2) * 0.72;
   updateCard();
+}
+
+function axisLabelFromPointer(event) {
+  const rect = canvas.getBoundingClientRect();
+  const x = event.clientX - rect.left;
+  const y = event.clientY - rect.top;
+  return state.axisLabelHits.find(
+    (hit) => x >= hit.x - 8 && x <= hit.x + hit.width + 8 && y >= hit.y - 8 && y <= hit.y + hit.height + 8,
+  );
+}
+
+function snapToAxis(axis) {
+  const views = {
+    x: { yaw: 0, pitch: 0 },
+    y: { yaw: state.targetYaw, pitch: 0 },
+    z: { yaw: Math.PI / 2, pitch: 0 },
+  };
+  const view = views[axis];
+  if (!view) return;
+  state.targetYaw = view.yaw;
+  state.targetPitch = view.pitch;
+  state.pulse = 1;
 }
 
 function nearestNodeFromPointer(event, maxDistance = 28) {
@@ -994,6 +1051,19 @@ canvas.addEventListener("pointerup", (event) => {
   state.drag = false;
   state.pointerId = null;
   if (!state.moved) {
+    const axisHit = axisLabelFromPointer(event);
+    if (axisHit) {
+      const now = performance.now();
+      const lastTap = state.lastAxisTap;
+      if (lastTap && lastTap.axis === axisHit.axis && now - lastTap.time < 340) {
+        snapToAxis(axisHit.axis);
+        state.lastAxisTap = null;
+      } else {
+        state.lastAxisTap = { axis: axisHit.axis, time: now };
+      }
+      return;
+    }
+
     const tapRadius = event.pointerType === "touch" ? 44 : 28;
     const index = nearestNodeFromPointer(event, tapRadius);
     if (index >= 0) selectNode(index);
@@ -1025,6 +1095,13 @@ canvas.addEventListener(
   { passive: false },
 );
 
+canvas.addEventListener("dblclick", (event) => {
+  const axisHit = axisLabelFromPointer(event);
+  if (!axisHit) return;
+  event.preventDefault();
+  snapToAxis(axisHit.axis);
+});
+
 window.addEventListener("keydown", (event) => {
   const keys = {
     ArrowLeft: [-1, 0],
@@ -1042,6 +1119,7 @@ modeButtons.forEach((button) => {
 });
 
 legendToggle.addEventListener("click", toggleLegend);
+axisToggle.addEventListener("click", cycleAxisBoard);
 
 window.addEventListener("resize", resize);
 resize();

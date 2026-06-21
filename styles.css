@@ -70,6 +70,9 @@ canvas:active {
   color: #ccecff;
   font-size: 12px;
   backdrop-filter: blur(10px);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
 }
 
 .axis-board {
@@ -80,7 +83,38 @@ canvas:active {
   display: grid;
   gap: 8px;
   width: min(420px, calc(100% - 300px));
-  pointer-events: none;
+  pointer-events: auto;
+}
+
+.axis-toggle {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  padding: 4px 10px;
+  border: 1px solid rgba(93, 231, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(93, 231, 255, 0.08);
+  color: var(--cyan);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 0 18px rgba(93, 231, 255, 0.08);
+}
+
+.axis-board.is-compact {
+  width: min(260px, calc(100% - 300px));
+}
+
+.axis-board.is-hidden {
+  width: auto;
+}
+
+.axis-board.is-hidden .axis-chip {
+  display: none;
 }
 
 .axis-x,
@@ -423,7 +457,15 @@ footer span {
   }
 
   .axis-board {
-    width: calc(100% - 36px);
+    width: min(360px, calc(100% - 132px));
+  }
+
+  .axis-board.is-compact {
+    width: min(230px, calc(100% - 132px));
+  }
+
+  .axis-board.is-hidden {
+    width: auto;
   }
 
   .legend {
