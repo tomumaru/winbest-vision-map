@@ -1,4 +1,4 @@
-const CACHE_NAME = "winbest-vision-map-v2";
+const CACHE_NAME = "winbest-vision-map-v3";
 const APP_SHELL = [
   "./",
   "./index.html",

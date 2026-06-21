@@ -1,6 +1,7 @@
 const canvas = document.querySelector("#space");
 const ctx = canvas.getContext("2d");
-const SPACE_SCALE = 1.42;
+const SPACE_SCALE = 1.72;
+const ZOOM_FACTORS = [0.24, 0.31, 0.39, 0.5, 0.64];
 
 let nodes = [
   {
@@ -123,6 +124,7 @@ const datasets = {
       ["belief", "#7dffbd", "信念 / 価値創出"],
       ["base", "#6ba8ff", "現状の強み"],
       ["challenge", "#ff5f7a", "重要課題"],
+      ["talent", "#a8a2ff", "採用・育成施策"],
     ],
     axisEnds: {
       xNeg: "現場実態",
@@ -228,14 +230,79 @@ const datasets = {
         id: "recruiting",
         category: "challenge",
         kind: "CHALLENGE",
-        title: "採用と育成の持続性",
-        body: "優秀な人材の確保と育成が継続的な競争課題になっている。",
-        points: ["多様な人材戦略と接続", "育つ仕組みが採用力にもなる", "社員と家族の幸せにも影響する"],
-        x: -0.52,
-        y: 0.18,
-        z: -0.64,
+        title: "採用戦略と契約難",
+        body: "若手人材の採用競争や定着率の低さを避けるため、シニアフェローと外国籍新人に力を入れている。一方で、高齢者や外国籍人材のIT業務委託・派遣契約は難しい。",
+        points: ["社会全体の採用競争から正面衝突しない戦略", "55歳以上の雇用機会創出と若手への技術継承", "勤勉な外国籍新人の採用・育成", "契約面の難しさが拡大の壁になる"],
+        x: -0.82,
+        y: 0.34,
+        z: -0.78,
         color: "#ff7f96",
-        weight: 1.25,
+        weight: 1.55,
+      },
+      {
+        id: "client-expansion",
+        category: "challenge",
+        kind: "GROWTH CHALLENGE",
+        title: "取引先拡充",
+        body: "安定基盤の次に、取引先を広げてリスク分散と成長余地を増やす必要がある。",
+        points: ["最大顧客依存を抑えた土台をさらに強化する", "価値提供モデルを広げるための入口", "属人化した営業・顧客対応からの脱却ともつながる"],
+        x: 0.1,
+        y: 0.82,
+        z: -0.62,
+        color: "#ff6f8a",
+        weight: 1.45,
+      },
+      {
+        id: "customer-growth",
+        category: "challenge",
+        kind: "GROWTH CHALLENGE",
+        title: "既存顧客増強",
+        body: "既存顧客との関係を深め、人月だけではない価値提供へ広げる必要がある。",
+        points: ["既存顧客の中で提供価値を広げる", "技術・知識・仕組みを売るモデルへの橋渡し", "新規取引先拡充より短期で成果化しやすい可能性"],
+        x: 0.44,
+        y: 0.78,
+        z: -0.36,
+        color: "#ff7f96",
+        weight: 1.5,
+      },
+      {
+        id: "senior-fellow",
+        category: "talent",
+        kind: "TALENT INITIATIVE",
+        title: "シニアフェロー",
+        body: "55歳以上の雇用機会を創出し、若手への技術継承を担う。社会貢献としても作用する採用・育成施策。",
+        points: ["高齢者の活躍機会をつくる", "若手への技術継承を進める", "採用競争を避ける独自の人材戦略", "社会貢献性がある"],
+        x: -0.58,
+        y: 0.52,
+        z: -0.12,
+        color: "#a8a2ff",
+        weight: 1.38,
+      },
+      {
+        id: "foreign-talent",
+        category: "talent",
+        kind: "TALENT INITIATIVE",
+        title: "外国籍新人採用",
+        body: "若手の在社率低下や採用競争を背景に、勤勉な外国籍新人を対象として採用・育成する。",
+        points: ["一般的な若手採用競争を避ける", "勤勉な外国籍人材に着目", "新人として育成し、将来の中核人材化を狙う"],
+        x: -1.02,
+        y: 0.58,
+        z: -0.28,
+        color: "#a8a2ff",
+        weight: 1.3,
+      },
+      {
+        id: "contract-barrier",
+        category: "challenge",
+        kind: "BARRIER",
+        title: "高齢者・外国籍人材の契約難",
+        body: "高齢者や外国籍人材によるITシステム業務委託・派遣契約は、顧客側の受け入れや契約条件の面で難しさがある。",
+        points: ["採用戦略そのものは良いが、契約化に壁がある", "シニアフェローと外国籍新人の両方に関わる", "取引先拡充・既存顧客増強とも接続する阻害要因"],
+        x: -1.14,
+        y: 0.12,
+        z: -0.92,
+        color: "#ff5f7a",
+        weight: 1.48,
       },
       {
         id: "ai-adaptation",
@@ -310,9 +377,24 @@ const datasets = {
       ["dependency", "succession"],
       ["dependency", "manmonth"],
       ["dependency", "recruiting"],
+      ["recruiting", "senior-fellow"],
+      ["recruiting", "foreign-talent"],
+      ["senior-fellow", "succession"],
+      ["senior-fellow", "family"],
+      ["foreign-talent", "knowledge-system"],
+      ["contract-barrier", "senior-fellow"],
+      ["contract-barrier", "foreign-talent"],
+      ["contract-barrier", "client-expansion"],
+      ["contract-barrier", "customer-growth"],
       ["succession", "knowledge-system"],
       ["dependency", "belonging"],
       ["manmonth", "new-service"],
+      ["manmonth", "customer-growth"],
+      ["manmonth", "client-expansion"],
+      ["stable-base", "client-expansion"],
+      ["stable-base", "customer-growth"],
+      ["client-expansion", "first-vision"],
+      ["customer-growth", "first-vision"],
       ["ai-adaptation", "ai-productivity"],
       ["knowledge-system", "first-vision"],
       ["ai-productivity", "first-vision"],
@@ -446,6 +528,10 @@ const state = {
   lastY: 0,
   moved: false,
   pulse: 0,
+  zoomLevel: 2,
+  pointers: new Map(),
+  pinchDistance: 0,
+  pinchCooldown: false,
   dimmedCategories: new Set(),
 };
 
@@ -457,7 +543,22 @@ function resize() {
   canvas.width = Math.floor(rect.width * dpr);
   canvas.height = Math.floor(rect.height * dpr);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  state.targetZoom = Math.min(rect.width, rect.height) * 0.34;
+  applyZoomLevel();
+}
+
+function zoomForLevel(level = state.zoomLevel) {
+  const index = Math.max(0, Math.min(ZOOM_FACTORS.length - 1, level));
+  return Math.min(state.width, state.height) * ZOOM_FACTORS[index];
+}
+
+function applyZoomLevel(level = state.zoomLevel) {
+  state.zoomLevel = Math.max(0, Math.min(ZOOM_FACTORS.length - 1, level));
+  state.targetZoom = zoomForLevel();
+}
+
+function stepZoom(direction) {
+  applyZoomLevel(state.zoomLevel + direction);
+  state.pulse = 1;
 }
 
 function rotate(point) {
@@ -801,19 +902,75 @@ function moveByDirection(dx, dy) {
   selectNode(best);
 }
 
+function updatePointer(event) {
+  state.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+}
+
+function removePointer(event) {
+  state.pointers.delete(event.pointerId);
+  if (state.pointers.size < 2) {
+    state.pinchDistance = 0;
+    state.pinchCooldown = false;
+  }
+}
+
+function getPinchDistance() {
+  const points = [...state.pointers.values()];
+  if (points.length < 2) return 0;
+  return Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
+}
+
+function handlePinch() {
+  const distance = getPinchDistance();
+  if (!distance) return false;
+  if (!state.pinchDistance) {
+    state.pinchDistance = distance;
+    return true;
+  }
+
+  const ratio = distance / state.pinchDistance;
+  if (!state.pinchCooldown && ratio > 1.16) {
+    stepZoom(1);
+    state.pinchCooldown = true;
+    state.pinchDistance = distance;
+  } else if (!state.pinchCooldown && ratio < 0.86) {
+    stepZoom(-1);
+    state.pinchCooldown = true;
+    state.pinchDistance = distance;
+  }
+
+  if (Math.abs(ratio - 1) < 0.05) state.pinchCooldown = false;
+  state.moved = true;
+  return true;
+}
+
 canvas.addEventListener("pointerdown", (event) => {
   event.preventDefault();
-  state.drag = true;
-  state.pointerId = event.pointerId;
-  state.startX = event.clientX;
-  state.startY = event.clientY;
-  state.lastX = event.clientX;
-  state.lastY = event.clientY;
-  state.moved = false;
+  updatePointer(event);
+  if (state.pointers.size === 1) {
+    state.drag = true;
+    state.pointerId = event.pointerId;
+    state.startX = event.clientX;
+    state.startY = event.clientY;
+    state.lastX = event.clientX;
+    state.lastY = event.clientY;
+    state.moved = false;
+  } else {
+    state.drag = false;
+    state.pinchDistance = getPinchDistance();
+    state.moved = true;
+  }
   canvas.setPointerCapture(event.pointerId);
 });
 
 canvas.addEventListener("pointermove", (event) => {
+  updatePointer(event);
+  if (state.pointers.size >= 2) {
+    event.preventDefault();
+    handlePinch();
+    return;
+  }
+
   if (state.drag && event.pointerId === state.pointerId) {
     event.preventDefault();
     const dx = event.clientX - state.lastX;
@@ -830,8 +987,10 @@ canvas.addEventListener("pointermove", (event) => {
 });
 
 canvas.addEventListener("pointerup", (event) => {
-  if (event.pointerId !== state.pointerId) return;
+  const wasActivePointer = event.pointerId === state.pointerId;
   event.preventDefault();
+  removePointer(event);
+  if (!wasActivePointer) return;
   state.drag = false;
   state.pointerId = null;
   if (!state.moved) {
@@ -842,7 +1001,9 @@ canvas.addEventListener("pointerup", (event) => {
 });
 
 canvas.addEventListener("pointercancel", (event) => {
-  if (event.pointerId !== state.pointerId) return;
+  const wasActivePointer = event.pointerId === state.pointerId;
+  removePointer(event);
+  if (!wasActivePointer) return;
   state.drag = false;
   state.pointerId = null;
   state.moved = false;
@@ -852,7 +1013,14 @@ canvas.addEventListener(
   "wheel",
   (event) => {
     event.preventDefault();
-    state.targetZoom = Math.max(140, Math.min(760, state.targetZoom - event.deltaY * 0.45));
+    if (event.ctrlKey) {
+      stepZoom(event.deltaY < 0 ? 1 : -1);
+      return;
+    }
+
+    const minZoom = zoomForLevel(0);
+    const maxZoom = zoomForLevel(ZOOM_FACTORS.length - 1);
+    state.targetZoom = Math.max(minZoom, Math.min(maxZoom, state.targetZoom - event.deltaY * 0.28));
   },
   { passive: false },
 );
