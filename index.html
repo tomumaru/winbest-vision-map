@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#070b12" />
+    <meta name="description" content="Winbest Vision Map and 3D thought space visualization." />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Vision Map" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>3D思考空間</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icons/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="viewport" aria-label="3D思考空間">
+        <canvas id="space" aria-label="思考ノードの3Dマップ"></canvas>
+        <div class="axis-board" aria-label="3軸">
+          <div class="axis-chip axis-x">X: 具象 ↔ 構造</div>
+          <div class="axis-chip axis-y">Y: 内省 ↔ 接続</div>
+          <div class="axis-chip axis-z">Z: 定着 ↔ 流動</div>
+        </div>
+        <div class="legend" aria-label="凡例">
+          <p class="legend-title">Legend</p>
+          <div id="legend-items"></div>
+        </div>
+        <section class="node-card" id="node-card">
+          <div class="node-card-top">
+            <p class="label">Selected Node</p>
+            <span id="node-kind">CORE</span>
+          </div>
+          <h2 id="node-title">軸の仮説</h2>
+          <p id="node-body">
+            ノードをクリック、またはカーソルキーで近いノードへ移動できます。
+          </p>
+          <ul class="node-points" id="node-points"></ul>
+          <dl>
+            <div><dt>X</dt><dd id="node-x">0.00</dd></div>
+            <div><dt>Y</dt><dd id="node-y">0.00</dd></div>
+            <div><dt>Z</dt><dd id="node-z">0.00</dd></div>
+          </dl>
+        </section>
+      </section>
+
+      <aside class="panel">
+        <header>
+          <p class="eyebrow">Personal Thought Space</p>
+          <h1 id="map-title">3D思考空間</h1>
+        </header>
+
+        <nav class="mode-switch" aria-label="表示モード">
+          <button type="button" data-mode="winbest">Winbest</button>
+          <button class="is-active" type="button" data-mode="thought">思考</button>
+          <button type="button" data-mode="projects">企画</button>
+          <button type="button" data-mode="energy">状態</button>
+          <button type="button" data-mode="story">物語</button>
+        </nav>
+
+        <section class="axis-notes">
+          <h2 id="axis-title">3軸の初期案</h2>
+          <p id="axis-description">
+            汎用軸をそのまま使うより、汎用的に測れる内側の軸に、あなた固有の呼び名を与えるのが良さそうです。
+          </p>
+          <ul id="axis-list">
+            <li><strong>X</strong> 具象から構造へ。体験・事例から、モデル・設計へ。</li>
+            <li><strong>Y</strong> 内省から接続へ。自分の感覚から、人・社会・AIとの関係へ。</li>
+            <li><strong>Z</strong> 定着から流動へ。保存したい核から、変化し続ける実験へ。</li>
+          </ul>
+        </section>
+
+        <footer>
+          <span>Drag</span>
+          <span>Wheel</span>
+          <span>Click</span>
+          <span>Arrow keys</span>
+        </footer>
+      </aside>
+    </main>
+
+    <script src="./app.js"></script>
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("./sw.js").catch(() => {});
+        });
+      }
+    </script>
+  </body>
+</html>
