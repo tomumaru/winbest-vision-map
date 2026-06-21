@@ -421,6 +421,8 @@ const axisChips = [
   document.querySelector(".axis-z"),
 ];
 const legendItems = document.querySelector("#legend-items");
+const legendPanel = document.querySelector(".legend");
+const legendToggle = document.querySelector(".legend-toggle");
 const modeButtons = [...document.querySelectorAll("[data-mode]")];
 let currentDataset = null;
 let currentLegend = [];
@@ -742,6 +744,18 @@ function toggleCategory(category) {
   });
 }
 
+function toggleLegend() {
+  const isMobile = window.matchMedia("(max-width: 820px)").matches;
+  if (isMobile) {
+    legendPanel.classList.toggle("is-open");
+    legendToggle.setAttribute("aria-expanded", String(legendPanel.classList.contains("is-open")));
+    return;
+  }
+
+  legendPanel.classList.toggle("is-collapsed");
+  legendToggle.setAttribute("aria-expanded", String(!legendPanel.classList.contains("is-collapsed")));
+}
+
 function selectNode(index) {
   state.selected = index;
   state.pulse = 1;
@@ -858,6 +872,8 @@ window.addEventListener("keydown", (event) => {
 modeButtons.forEach((button) => {
   button.addEventListener("click", () => applyDataset(button.dataset.mode));
 });
+
+legendToggle.addEventListener("click", toggleLegend);
 
 window.addEventListener("resize", resize);
 resize();

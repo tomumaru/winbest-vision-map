@@ -104,12 +104,36 @@ canvas:active {
   pointer-events: auto;
 }
 
-.legend-title {
+.legend-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
   margin: 0 0 9px;
+  padding: 4px 9px;
+  border: 1px solid rgba(93, 231, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(93, 231, 255, 0.08);
   color: var(--cyan);
+  font: inherit;
   font-size: 11px;
   font-weight: 800;
   text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 0 18px rgba(93, 231, 255, 0.08);
+}
+
+.legend.is-collapsed {
+  width: auto;
+  padding: 8px;
+}
+
+.legend.is-collapsed .legend-toggle {
+  margin: 0;
+}
+
+.legend.is-collapsed #legend-items {
+  display: none;
 }
 
 #legend-items {
@@ -403,14 +427,29 @@ footer span {
   }
 
   .legend {
-    top: auto;
-    right: 18px;
-    bottom: 224px;
-    width: min(240px, calc(100% - 36px));
+    top: 18px;
+    right: 12px;
+    bottom: auto;
+    width: auto;
+    max-width: min(250px, calc(100% - 24px));
+    padding: 8px;
+  }
+
+  .legend:not(.is-open) #legend-items {
+    display: none;
+  }
+
+  .legend:not(.is-open) .legend-toggle {
+    margin: 0;
+  }
+
+  .legend.is-open {
+    top: 62px;
+    width: min(250px, calc(100% - 24px));
     padding: 10px;
   }
 
-  .legend-title {
+  .legend.is-open .legend-toggle {
     margin-bottom: 5px;
   }
 
